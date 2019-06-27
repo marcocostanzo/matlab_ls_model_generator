@@ -1,8 +1,21 @@
-function gauss_param = compute_taun_model( c_tilde_vec, taun_norm, num_gauss, debug )
+function gauss_param = compute_taun_model( c_tilde_vec, taun_norm, num_gauss, radius_decim, debug )
 
-if nargin < 4
+if nargin < 5
     debug = false;
 end
+if debug
+    time_plot = 10; 
+    c_tilde_vec_in = c_tilde_vec;
+    taun_norm_in = taun_norm;
+else
+    time_plot = inf;
+end
+
+%%Preprocess the data
+targets = [c_tilde_vec(:)'/max(c_tilde_vec(:)); taun_norm(:)'/max(taun_norm(:))];
+[ targets, mask_mantieni ] = gpu_decim_norm( targets, radius_decim, time_plot );
+c_tilde_vec = c_tilde_vec(mask_mantieni);
+taun_norm = taun_norm(mask_mantieni);
 
 x0 = [ 1/num_gauss*ones(num_gauss,1) , (rand(num_gauss,1) + rand(num_gauss,1)) ];
 
@@ -19,12 +32,13 @@ if(debug)
     
     figure
     subplot(2,1,1)
-    plot( c_tilde_vec,taun_norm,'-o' )
+    plot( c_tilde_vec_in,taun_norm_in,'-o' )
     hold on
-    tau_pred = tau_model( c_tilde_vec,gauss_param);
-    plot( c_tilde_vec,tau_pred )
+    plot( c_tilde_vec,taun_norm,'r-o' )
+    tau_pred = tau_model( c_tilde_vec_in,gauss_param);
+    plot( c_tilde_vec_in,tau_pred )
     subplot(2,1,2)
-    plot( c_tilde_vec,taun_norm - tau_pred )
+    plot( c_tilde_vec_in,taun_norm_in - tau_pred )
 
 end
 

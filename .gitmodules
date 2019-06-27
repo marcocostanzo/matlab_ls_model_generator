@@ -1,3 +1,7 @@
 [submodule "matlab_limit_surface"]
 	path = matlab_limit_surface
 	url = git@github.com:marcocostanzo/matlab_limit_surface.git
+[submodule "matlab_sun_preprocess"]
+	path = matlab_sun_preprocess
+	url = git@github.com:marcocostanzo/matlab_sun_preprocess.git
+	branch = master

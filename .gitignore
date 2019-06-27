@@ -30,3 +30,4 @@ octave-workspace
 #project-related
 out/
 tmp/
+tmp*/

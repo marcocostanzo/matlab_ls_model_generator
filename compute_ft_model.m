@@ -1,10 +1,23 @@
-function sigm_param = compute_ft_model( c_tilde_vec, ft_norm, num_sigm, debug )
+function sigm_param = compute_ft_model( c_tilde_vec, ft_norm, num_sigm, radius_decim, debug )
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
-if nargin < 4
+if nargin < 5
     debug = false;
 end
+if debug
+    time_plot = 10; 
+    c_tilde_vec_in = c_tilde_vec;
+    ft_norm_in = ft_norm;
+else
+    time_plot = inf;
+end
+
+%%Preprocess the data
+targets = [c_tilde_vec(:)'/max(c_tilde_vec(:)); ft_norm(:)'/max(ft_norm(:))];
+[ targets, mask_mantieni ] = gpu_decim_norm( targets, radius_decim, time_plot );
+c_tilde_vec = c_tilde_vec(mask_mantieni);
+ft_norm = ft_norm(mask_mantieni);
 
 x0 = [ -1/num_sigm*ones(num_sigm,1) , (rand(num_sigm,1) + rand(num_sigm,1)) ];
 %fmincon
@@ -21,12 +34,13 @@ if(debug)
 
     figure
     subplot(2,1,1)
-    plot( c_tilde_vec,ft_norm,'-o' )
+    plot( c_tilde_vec_in,ft_norm_in,'-o' )
     hold on
-    ft_pred = ft_model( c_tilde_vec,sigm_param);
-    plot( c_tilde_vec,ft_pred )
+    plot( c_tilde_vec,ft_norm,'r-o' )
+    ft_pred = ft_model( c_tilde_vec_in,sigm_param);
+    plot( c_tilde_vec_in,ft_pred )
     subplot(2,1,2)
-    plot( c_tilde_vec,ft_norm - ft_pred )
+    plot( c_tilde_vec_in,ft_norm_in - ft_pred )
 
 end
 

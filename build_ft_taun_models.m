@@ -11,7 +11,10 @@ b_assume_simmetry = true;
 
 close all  %<-- Comment here to not close figures
 b_plot_ls = true;
+b_plot_sigma = true;
+gamma = 1/3;
 debug_fmin = true;
+decim_radius_perc = 0.005;
 
 
 %% Params2
@@ -29,6 +32,7 @@ end
 
 %% Path
 addpath('matlab_limit_surface\LS_lib')
+addpath('matlab_sun_preprocess')
 
 %% Compute Integrals
 
@@ -45,7 +49,7 @@ if ~isfile([file_tmp_str '.mat'])
         c_tilde_vec = [ -fliplr(c_tilde_vec) c_tilde_vec];
     end
     
-    int_points = 6000;
+    int_points = 13782; % run time 56min on 'GeForce GTX 1050 Ti'
     [ ft_norm , taun_norm ] = calculateLimitSurfaceNorm( ...
                                                     c_tilde_vec,...
                                                     k,...
@@ -92,9 +96,9 @@ file_tmp_str = [tmp_folder_str,'ft_model_tmp_k' num2str(k,file_name_precision)];
 file_tmp_str = strrep(file_tmp_str,'.','_');
 if ~isfile([file_tmp_str '.mat'])
     
-    sigm_params = compute_ft_model( c_tilde_vec, ft_norm, num_sigm, debug_fmin );
+    sigm_params = compute_ft_model( c_tilde_vec, ft_norm, num_sigm, decim_radius_perc, debug_fmin );
     
-    save(file_tmp_str, 'sigm_params');
+    %save(file_tmp_str, 'sigm_params');
     
 else
     warning('using temp file for ft_model')
@@ -109,9 +113,9 @@ file_tmp_str = [tmp_folder_str,'taun_model_tmp_k' num2str(k,file_name_precision)
 file_tmp_str = strrep(file_tmp_str,'.','_');
 if ~isfile([file_tmp_str '.mat'])
     
-    gauss_params = compute_taun_model( c_tilde_vec, taun_norm, num_gauss, debug_fmin );
+    gauss_params = compute_taun_model( c_tilde_vec, taun_norm, num_gauss, decim_radius_perc, debug_fmin );
     
-    save(file_tmp_str, 'gauss_params');
+    %save(file_tmp_str, 'gauss_params');
     
 else
     
@@ -129,6 +133,18 @@ if(b_plot_ls)
     hold on
     plot(ft_norm_dbg, taun_norm_dbg)
     hold off
+    
+    if(b_plot_sigma)
+        sigma_ls = getSigma(ft_norm,taun_norm,gamma);
+        sigma_mod = getSigma(ft_norm_dbg,taun_norm_dbg,gamma);
+        if(~exist('fig_sigma','var') || ~isvalid(fig_sigma) )
+            fig_sigma = figure;
+        else
+           figure(fig_sigma);
+        end
+        plot(c_tilde_vec,sigma_ls,'-o', c_tilde_dbg, sigma_mod)
+    end
+    
 end
 
 %% Write files
